@@ -1,26 +1,53 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { useMutation } from "@tanstack/react-query"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
-import { Loader2, BrainCircuit, Activity, BarChart3 } from "lucide-react"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts"
-import { api } from "@/lib/api"
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, BrainCircuit, Activity, BarChart3 } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell,
+} from "recharts";
+import { api } from "@/lib/api";
 
 const baseSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   organType: z.enum(["LIVER", "HEART", "KIDNEY"]),
   age: z.coerce.number().min(0).max(120),
   bloodType: z.string(),
-})
+});
 
 const liverSchema = baseSchema.extend({
   organType: z.literal("LIVER"),
@@ -28,29 +55,35 @@ const liverSchema = baseSchema.extend({
   albumin: z.coerce.number().min(0),
   inr: z.coerce.number().min(0),
   ascites: z.enum(["NONE", "MILD", "SEVERE"]),
-})
+});
 
 const heartSchema = baseSchema.extend({
   organType: z.literal("HEART"),
   cholesterol: z.coerce.number().min(0),
   bloodPressure: z.coerce.number().min(0),
   chestPainType: z.enum(["TYPICAL", "ATYPICAL", "NON_ANGINAL", "ASYMPTOMATIC"]),
-})
+});
 
 const kidneySchema = baseSchema.extend({
   organType: z.literal("KIDNEY"),
   creatinine: z.coerce.number().min(0),
   hemoglobin: z.coerce.number().min(0),
   sodium: z.coerce.number().min(0),
-})
+});
 
-const recipientSchema = z.discriminatedUnion("organType", [liverSchema, heartSchema, kidneySchema])
+const recipientSchema = z.discriminatedUnion("organType", [
+  liverSchema,
+  heartSchema,
+  kidneySchema,
+]);
 
-type RecipientFormValues = z.infer<typeof recipientSchema>
+type RecipientFormValues = z.infer<typeof recipientSchema>;
 
 export function RecipientForm() {
-  const { toast } = useToast()
-  const [result, setResult] = useState<{ score: number; shap: any[] } | null>(null)
+  const { toast } = useToast();
+  const [result, setResult] = useState<{ score: number; shap: any[] } | null>(
+    null
+  );
 
   const form = useForm<RecipientFormValues>({
     resolver: zodResolver(recipientSchema),
@@ -64,23 +97,23 @@ export function RecipientForm() {
       inr: 1.1,
       ascites: "NONE",
     } as any,
-  })
+  });
 
-  const organType = form.watch("organType")
+  const organType = form.watch("organType");
 
   const mutation = useMutation({
     mutationFn: (data: RecipientFormValues) => api.registerRecipient(data),
     onSuccess: (data) => {
-      setResult(data)
+      setResult(data);
       toast({
         title: "Registration Successful",
         description: "Patient urgency has been calculated by ML engine.",
-      })
+      });
     },
-  })
+  });
 
   function onSubmit(values: RecipientFormValues) {
-    mutation.mutate(values)
+    mutation.mutate(values);
   }
 
   return (
@@ -91,7 +124,9 @@ export function RecipientForm() {
             <Activity className="h-5 w-5 text-primary" />
             Recipient Details
           </CardTitle>
-          <CardDescription>Register a new patient for the organ transplant waiting list.</CardDescription>
+          <CardDescription>
+            Register a new patient for the organ transplant waiting list.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -102,7 +137,9 @@ export function RecipientForm() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem className="col-span-2">
-                      <FormLabel>Patient Full Name (Masked for Blockchain)</FormLabel>
+                      <FormLabel>
+                        Patient Full Name (Masked for Blockchain)
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="John Doe" {...field} />
                       </FormControl>
@@ -116,7 +153,10 @@ export function RecipientForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Requested Organ</FormLabel>
-                      <Select onValueChange={(v) => field.onChange(v)} defaultValue={field.value}>
+                      <Select
+                        onValueChange={(v) => field.onChange(v)}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select organ" />
@@ -194,7 +234,10 @@ export function RecipientForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Ascites</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select level" />
@@ -275,7 +318,11 @@ export function RecipientForm() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={mutation.isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={mutation.isPending}
+              >
                 {mutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -293,52 +340,56 @@ export function RecipientForm() {
       <div className="space-y-6">
         {result ? (
           <>
-            <Card className="border-primary bg-primary/5 shadow-xl animate-in fade-in slide-in-from-right-4 duration-500">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium uppercase tracking-wider text-primary">
-                  Urgency Score
-                </CardTitle>
-                <div className="text-4xl font-bold">{result.score}/100</div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  The ML model has assigned this priority score based on the clinical parameters provided. This score is
-                  immutable and recorded on the blockchain.
-                </p>
-              </CardContent>
-            </Card>
-
             <Card className="animate-in fade-in slide-in-from-right-4 duration-500 delay-150">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BrainCircuit className="h-5 w-5 text-primary" />
                   SHAP Explanations
                 </CardTitle>
-                <CardDescription>Feature contribution to the calculated urgency score.</CardDescription>
+                <CardDescription>
+                  Feature contribution to the calculated urgency score.
+                </CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={result.shap} layout="vertical" margin={{ left: 20 }}>
+                  <BarChart
+                    data={result.shap}
+                    layout="vertical"
+                    margin={{ left: 20 }}
+                  >
                     <XAxis type="number" hide />
-                    <YAxis dataKey="name" type="category" width={100} fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={100}
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <Tooltip
                       cursor={{ fill: "transparent" }}
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
                           return (
                             <div className="bg-background border rounded-lg p-2 shadow-sm text-xs">
-                              {`${payload[0].payload.name}: ${payload[0].value > 0 ? "+" : ""}${payload[0].value}`}
+                              {`${payload[0].payload.name}: ${
+                                payload[0].value > 0 ? "+" : ""
+                              }${payload[0].value}`}
                             </div>
-                          )
+                          );
                         }
-                        return null
+                        return null;
                       }}
                     />
                     <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                       {result.shap.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={entry.value > 0 ? "oklch(0.55 0.18 25)" : "oklch(0.55 0.15 160)"}
+                          fill={
+                            entry.value > 0
+                              ? "oklch(0.55 0.18 25)"
+                              : "oklch(0.55 0.15 160)"
+                          }
                         />
                       ))}
                     </Bar>
@@ -351,8 +402,9 @@ export function RecipientForm() {
                   Text Summary
                 </div>
                 <p className="text-xs text-muted-foreground italic">
-                  "High organ condition indicators and age factor contributed most significantly to the increased
-                  urgency. Blood match results had a moderate positive impact on the score."
+                  "High organ condition indicators and age factor contributed
+                  most significantly to the increased urgency. Blood match
+                  results had a moderate positive impact on the score."
                 </p>
               </CardFooter>
             </Card>
@@ -361,13 +413,15 @@ export function RecipientForm() {
           <div className="h-full flex items-center justify-center p-12 border-2 border-dashed rounded-lg opacity-50">
             <div className="text-center space-y-2">
               <BrainCircuit className="h-12 w-12 mx-auto text-muted-foreground" />
-              <p className="text-sm">Submit patient details to view ML urgency analysis</p>
+              <p className="text-sm">
+                Submit patient details to view ML urgency analysis
+              </p>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
-import { CardFooter } from "@/components/ui/card"
+import { CardFooter } from "@/components/ui/card";
