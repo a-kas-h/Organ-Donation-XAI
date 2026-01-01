@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # 1️⃣ Load dataset
-df = pd.read_csv("data/kidney_dataset.csv")
+df = pd.read_csv("data/improved_kidney_dataset.csv")
 
 # 2️⃣ Feature selection
 base_features = [
