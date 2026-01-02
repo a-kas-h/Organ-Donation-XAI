@@ -12,17 +12,26 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
-import { LayoutDashboard, UserPlus, HeartHandshake, ListOrdered, History, LogOut, ShieldCheck } from "lucide-react"
+import { LayoutDashboard, UserPlus, HeartHandshake, ListOrdered, History, LogOut, ShieldCheck, Database, Activity, FileCheck } from "lucide-react"
 import { useAuth } from "@/lib/auth"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 
 const NAVIGATION = [
+  // Common
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
     roles: ["DOCTOR", "ADMIN", "AUDITOR"],
+  },
+  
+  // Doctor Routes
+  {
+    title: "Register Donor",
+    url: "/register-donor",
+    icon: HeartHandshake,
+    roles: ["DOCTOR"],
   },
   {
     title: "Register Recipient",
@@ -31,28 +40,50 @@ const NAVIGATION = [
     roles: ["DOCTOR"],
   },
   {
-    title: "Donor Registration",
-    url: "/register-donor",
-    icon: HeartHandshake,
-    roles: ["ADMIN"],
-  },
-  {
-    title: "Allocation Dashboard",
-    url: "/allocation-dashboard",
-    icon: ShieldCheck,
-    roles: ["ADMIN"],
-  },
-  {
-    title: "Waiting List",
-    url: "/waiting-list",
-    icon: ListOrdered,
-    roles: ["DOCTOR", "ADMIN", "AUDITOR"],
+    title: "Allocation Status",
+    url: "/allocation-status",
+    icon: Activity,
+    roles: ["DOCTOR"],
   },
   {
     title: "Allocation History",
     url: "/allocation-history",
     icon: History,
-    roles: ["DOCTOR", "ADMIN", "AUDITOR"],
+    roles: ["DOCTOR"],
+  },
+
+  // Admin Routes
+  {
+    title: "Donor Entries",
+    url: "/donor-list",
+    icon: Database,
+    roles: ["ADMIN"],
+  },
+  {
+    title: "Recipient Entries",
+    url: "/waiting-list",
+    icon: ListOrdered,
+    roles: ["ADMIN"],
+  },
+  {
+    title: "Trigger Allocation",
+    url: "/allocation-dashboard",
+    icon: ShieldCheck,
+    roles: ["ADMIN"],
+  },
+
+  // Auditor Routes
+  {
+    title: "Allocation Timeline",
+    url: "/allocation-history",
+    icon: Activity,
+    roles: ["AUDITOR"],
+  },
+  {
+    title: "Approval Checkpoints",
+    url: "/compliance",
+    icon: FileCheck,
+    roles: ["AUDITOR"],
   },
 ]
 
