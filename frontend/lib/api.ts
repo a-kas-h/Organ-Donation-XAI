@@ -1,8 +1,11 @@
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const BASE_URL = 'http://localhost:5000/api'
+
 
 export const api = {
   // GET /api/waiting-list
   getWaitingList: async (organ?: string) => {
+    // keeping mock for waiting list for now as per plan focus on registration/alloction
     await delay(800)
     const mockData = [
       {
@@ -38,36 +41,34 @@ export const api = {
 
   // POST /api/recipients
   registerRecipient: async (data: any) => {
-    await delay(1500)
-    return {
-      score: Math.floor(Math.random() * 40) + 50,
-      shap: [
-        { name: "Age", value: data.age > 60 ? 15 : -5 },
-        { name: "Clinical Values", value: 25 },
-        { name: "Blood Match", value: 10 },
-        { name: "Organ Condition", value: 30 },
-      ],
-    }
+    const res = await fetch('http://localhost:5000/api/recipients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to register recipient');
+    return res.json();
   },
 
   // POST /api/donors
   registerDonor: async (data: any) => {
-    await delay(1000)
-    return { success: true, ...data }
+    const res = await fetch('http://localhost:5000/api/donors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to register donor');
+    return res.json();
   },
 
   // POST /api/allocate
   allocate: async () => {
-    await delay(2000)
-    return {
-      id: "AL-" + Math.random().toString(36).substring(7),
-      organ: "LIVER",
-      recipientHash: "0x7a...4e1f",
-      urgencyScore: 88,
-      donorId: "DN-4921",
-      txHash: "0xf9b2...c3d1",
-      timestamp: new Date().toLocaleString(),
-    }
+    const res = await fetch('http://localhost:5000/api/allocation/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) throw new Error('Failed to trigger allocation');
+    return res.json();
   },
 
   // GET /api/history
@@ -89,5 +90,37 @@ export const api = {
         ],
       },
     ]
+  },
+
+  // NEW: Find Top 3 Donors for a Recipient
+  async findTopDonors(recipientId: string) {
+    const response = await fetch(`${BASE_URL}/matches/find-top-donors`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientId })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to find top donors');
+    }
+
+    return response.json();
+  },
+
+  // NEW: Doctor Approves a Match
+  async approveMatch(recipientId: string, donorId: string, doctorId: string, remarks?: string) {
+    const response = await fetch(`${BASE_URL}/matches/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientId, donorId, doctorId, remarks })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to approve match');
+    }
+
+    return response.json();
   },
 }

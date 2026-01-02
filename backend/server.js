@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Request Logging Middleware
 app.use((req, res, next) => {
-    console.log(`📨 ${req.method} ${req.originalUrl}`);
+    console.log(`📨 ${req.method} ${req.originalUrl} [DB State: ${mongoose.connection.readyState}]`);
     next();
 });
 
@@ -22,20 +22,27 @@ app.use((req, res, next) => {
 const matchRoutes = require('./routes/matchRoutes');
 const donorAdminRoutes = require('./routes/donorRoutes'); // Will create next
 const recipientAdminRoutes = require('./routes/recipientRoutes'); // Will create next
+const allocationRoutes = require('./routes/allocationRoutes');
 
 app.use('/api/matches', matchRoutes); // Routes for matching logic
 app.use('/api/donors', donorAdminRoutes);
 app.use('/api/recipients', recipientAdminRoutes);
+app.use('/api/allocation', allocationRoutes);
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-    .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+    .then(() => {
+        console.log('✅ MongoDB Connected');
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`🚀 Backend Server running on port ${PORT}`);
-});
+        // Start Server ONLY after DB connection succeeds
+        app.listen(PORT, () => {
+            console.log(`🚀 Backend Server running on port ${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error('❌ MongoDB Connection Error:', err);
+        process.exit(1); // Exit if DB connection fails
+    });

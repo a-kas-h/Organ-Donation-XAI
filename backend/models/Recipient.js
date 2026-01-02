@@ -4,6 +4,7 @@ const RecipientSchema = new mongoose.Schema({
     patientId: { type: String, required: true, unique: true }, // e.g., PAT2025-001
     age: { type: Number, required: true },
     weight: { type: Number, required: true },
+    height: { type: Number, required: true }, // in cm
     BMI: { type: Number, required: true },
     bloodType: { type: String, required: true },
     organRequired: { type: String, required: true },

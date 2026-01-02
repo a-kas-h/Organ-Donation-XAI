@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useMutation } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,12 +13,15 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2, HeartHandshake } from "lucide-react"
 import { api } from "@/lib/api"
 
+// Simplified schema focused on ML requirements
 const donorSchema = z.object({
   donorId: z.string().min(2, "Donor ID is required"),
+  age: z.coerce.number().min(0).max(120, "Age must be 0-120"),
+  weight: z.coerce.number().min(1).max(300, "Weight must be 1-300 kg"),
+  height: z.coerce.number().min(1).max(250, "Height must be 1-250 cm"),
   organType: z.enum(["LIVER", "HEART", "KIDNEY"]),
   bloodType: z.string(),
-  hospitalLocation: z.string(),
-  preservationStart: z.string(),
+  organHealthScore: z.coerce.number().min(0).max(100, "Score must be 0-100"),
 })
 
 export function DonorForm() {
@@ -28,26 +31,52 @@ export function DonorForm() {
     resolver: zodResolver(donorSchema),
     defaultValues: {
       donorId: `DN-${Math.floor(Math.random() * 10000)}`,
+      age: 35,
+      weight: 75,
+      height: 175,
       organType: "KIDNEY",
       bloodType: "O+",
-      hospitalLocation: "Central General Hospital",
-      preservationStart: new Date().toISOString().slice(0, 16),
+      organHealthScore: 95,
     },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: z.infer<typeof donorSchema>) => api.registerDonor(data),
+    mutationFn: (data: z.infer<typeof donorSchema>) => {
+      const bmi = data.weight / ((data.height / 100) ** 2);
+      const payload = {
+        donorId: data.donorId,
+        age: data.age,
+        weight: data.weight,
+        height: data.height,
+        BMI: parseFloat(bmi.toFixed(2)),
+        bloodType: data.bloodType,
+        organDonated: data.organType,
+        realTimeOrganHealthScore: data.organHealthScore,
+        organConditionAlert: "None",
+        medicalApproval: true
+      };
+      return api.registerDonor(payload);
+    },
     onSuccess: () => {
       toast({
         title: "Donor Registered",
-        description: "Organ has been added to the network and blockchain ledger.",
+        description: "Donor has been successfully registered in the system.",
       })
       form.reset({
         donorId: `DN-${Math.floor(Math.random() * 10000)}`,
+        age: 35,
+        weight: 75,
+        height: 175,
         organType: "KIDNEY",
         bloodType: "O+",
-        hospitalLocation: "Central General Hospital",
-        preservationStart: new Date().toISOString().slice(0, 16),
+        organHealthScore: 95,
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Failed to register donor",
+        variant: "destructive",
       })
     },
   })
@@ -57,9 +86,9 @@ export function DonorForm() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <HeartHandshake className="h-5 w-5 text-primary" />
-          Register Donor Organ
+          Register Donor
         </CardTitle>
-        <CardDescription>Add a newly available organ to the allocation network.</CardDescription>
+        <CardDescription>Register donor with fields required for ML matching</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -70,7 +99,7 @@ export function DonorForm() {
                 name="donorId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Donor ID (Anonymized)</FormLabel>
+                    <FormLabel>Donor ID</FormLabel>
                     <FormControl>
                       <Input {...field} readOnly />
                     </FormControl>
@@ -96,6 +125,46 @@ export function DonorForm() {
                         <SelectItem value="KIDNEY">Kidney</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Donor Age (ML Required)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="weight"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Weight (kg) (ML Required)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="height"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Height (cm)</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormDescription>Used to calculate BMI</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -129,26 +198,16 @@ export function DonorForm() {
               />
               <FormField
                 control={form.control}
-                name="hospitalLocation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Retrieval Hospital</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="preservationStart"
+                name="organHealthScore"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Preservation Start Time (Cold Ischemia Start)</FormLabel>
+                    <FormLabel>Organ Health Score (0-100) (ML Required)</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="number" {...field} />
                     </FormControl>
+                    <FormDescription>
+                      Real-time organ health assessment score (higher = healthier organ)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -156,7 +215,7 @@ export function DonorForm() {
             </div>
             <Button type="submit" className="w-full" disabled={mutation.isPending}>
               {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Register Organ
+              Register Donor
             </Button>
           </form>
         </Form>

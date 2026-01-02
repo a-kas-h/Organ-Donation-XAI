@@ -4,6 +4,7 @@ const DonorSchema = new mongoose.Schema({
     donorId: { type: String, required: true, unique: true }, // e.g., DNR2025-001
     age: { type: Number, required: true },
     weight: { type: Number, required: true },
+    height: { type: Number, required: true }, // in cm
     BMI: { type: Number, required: true },
     bloodType: { type: String, required: true },
     organDonated: { type: String, required: true }, // e.g., Kidney
