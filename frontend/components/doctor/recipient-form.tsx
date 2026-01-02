@@ -28,6 +28,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, BrainCircuit, Activity, BarChart3 } from "lucide-react";
@@ -373,7 +374,7 @@ export function RecipientForm() {
                           return (
                             <div className="bg-background border rounded-lg p-2 shadow-sm text-xs">
                               {`${payload[0].payload.name}: ${
-                                payload[0].value > 0 ? "+" : ""
+                                (payload[0].value as number) > 0 ? "+" : ""
                               }${payload[0].value}`}
                             </div>
                           );
@@ -424,4 +425,4 @@ export function RecipientForm() {
   );
 }
 
-import { CardFooter } from "@/components/ui/card";
+
