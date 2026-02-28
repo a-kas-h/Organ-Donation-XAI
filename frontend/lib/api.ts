@@ -3,40 +3,18 @@ const BASE_URL = 'http://localhost:5000/api'
 
 
 export const api = {
-  // GET /api/waiting-list
+  // GET /api/recipients/waiting
   getWaitingList: async (organ?: string) => {
-    // keeping mock for waiting list for now as per plan focus on registration/alloction
-    await delay(800)
-    const mockData = [
-      {
-        id: "1",
-        patientHash: "0x7a...4e1f",
-        urgencyScore: 92,
-        organ: "LIVER",
-        status: "WAITING",
-        timestamp: "2025-10-24 10:00",
-      },
-      {
-        id: "2",
-        patientHash: "0x2c...8b3d",
-        urgencyScore: 88,
-        organ: "HEART",
-        status: "WAITING",
-        timestamp: "2025-10-24 09:30",
-      },
-      {
-        id: "3",
-        patientHash: "0xf4...1a9e",
-        urgencyScore: 85,
-        organ: "KIDNEY",
-        status: "WAITING",
-        timestamp: "2025-10-24 08:45",
-      },
-    ]
+    const params = new URLSearchParams()
     if (organ && organ !== "ALL") {
-      return mockData.filter((r) => r.organ === organ)
+      params.set("organ", organ)
     }
-    return mockData
+    const url = `${BASE_URL}/recipients/waiting${params.toString() ? `?${params.toString()}` : ""}`
+    const res = await fetch(url)
+    if (!res.ok) {
+      throw new Error("Failed to load waiting list")
+    }
+    return res.json()
   },
 
   // POST /api/recipients
@@ -71,25 +49,13 @@ export const api = {
     return res.json();
   },
 
-  // GET /api/history
+  // GET /api/allocation/history
   getHistory: async () => {
-    await delay(1000)
-    return [
-      {
-        id: "1",
-        organ: "LIVER",
-        patientHash: "0x7a...4e1f",
-        urgencyScore: 92,
-        date: "2025-10-24 14:30",
-        txHash: "0xf9b2...c3d1",
-        shap: [
-          { name: "Bilirubin", value: 35 },
-          { name: "Age", value: 12 },
-          { name: "INR", value: 25 },
-          { name: "Blood Match", value: 10 },
-        ],
-      },
-    ]
+    const res = await fetch(`${BASE_URL}/allocation/history?limit=50`)
+    if (!res.ok) {
+      throw new Error("Failed to load allocation history")
+    }
+    return res.json()
   },
 
   // NEW: Find Top 3 Donors for a Recipient
@@ -122,5 +88,23 @@ export const api = {
     }
 
     return response.json();
+  },
+
+  // GET /api/donors
+  async getDonors() {
+    const response = await fetch(`${BASE_URL}/donors`)
+    if (!response.ok) {
+      throw new Error("Failed to load donors")
+    }
+    return response.json()
+  },
+
+  // GET /api/stats/overview
+  async getOverviewStats() {
+    const response = await fetch(`${BASE_URL}/stats/overview`)
+    if (!response.ok) {
+      throw new Error("Failed to load overview stats")
+    }
+    return response.json()
   },
 }

@@ -12,6 +12,31 @@ const generateTxHash = () => {
     return '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
 };
 
+// Simple helper to generate an anonymous but stable hash-like identifier
+const makePatientHash = (patientId) => {
+    if (!patientId) return 'UNKNOWN';
+    const prefix = patientId.slice(0, 3);
+    const suffix = patientId.slice(-4);
+    return `0x${prefix}...${suffix}`;
+};
+
+// Helper to generate a simple SHAP-style explanation placeholder
+const buildShapExplanation = (match) => {
+    const score = typeof match.predictedSurvivalChance === 'number'
+        ? match.predictedSurvivalChance
+        : 50;
+    const health = typeof match.realTimeOrganHealthScore === 'number'
+        ? match.realTimeOrganHealthScore
+        : 50;
+
+    return [
+        { name: 'Predicted_Survival', value: Number((score - 50).toFixed(1)) },
+        { name: 'Organ_Health', value: Number((health - 50).toFixed(1)) },
+        { name: 'Urgency_Weight', value: score >= 70 ? 15 : 5 },
+        { name: 'Compatibility_Buffer', value: 10 },
+    ];
+};
+
 // POST /api/allocation/trigger
 router.post('/trigger', async (req, res) => {
     try {
@@ -113,6 +138,49 @@ router.post('/trigger', async (req, res) => {
 
     } catch (error) {
         console.error("Allocation Error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/allocation/history
+router.get('/history', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit, 10) || 50;
+
+        const matches = await Match.find({ matchStatus: 'Approved' })
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+
+        if (!matches.length) {
+            return res.json([]);
+        }
+
+        const patientIds = [...new Set(matches.map((m) => m.patientId).filter(Boolean))];
+        const recipients = await Recipient.find({ patientId: { $in: patientIds } }).lean();
+        const recipientByPatientId = new Map();
+        recipients.forEach((r) => {
+            recipientByPatientId.set(r.patientId, r);
+        });
+
+        const history = matches.map((m) => {
+            const recipient = recipientByPatientId.get(m.patientId);
+            const organ = recipient?.organRequired || 'UNKNOWN';
+
+            return {
+                id: m._id.toString(),
+                organ,
+                patientHash: makePatientHash(m.patientId),
+                urgencyScore: m.predictedSurvivalChance,
+                date: (m.createdAt || m.timestampOrganScanned || new Date()).toISOString(),
+                txHash: generateTxHash(),
+                shap: buildShapExplanation(m),
+            };
+        });
+
+        res.json(history);
+    } catch (error) {
+        console.error('Allocation history error:', error);
         res.status(500).json({ error: error.message });
     }
 });

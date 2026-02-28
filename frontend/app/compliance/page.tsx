@@ -1,18 +1,32 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Shield, Eye, Lock, FileCheck, Server, AlertCircle, CheckCircle2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { api } from "@/lib/api"
+
+type OverviewStats = {
+  totalAllocations: number
+  allocationsToday: number
+}
 
 export default function CompliancePage() {
+  const { data: stats } = useQuery<OverviewStats>({
+    queryKey: ["overview-stats"],
+    queryFn: () => api.getOverviewStats(),
+  })
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-           <h1 className="text-2xl font-bold tracking-tight">Approval Checkpoints</h1>
-           <p className="text-muted-foreground">System-wide compliance and regulatory verification logs.</p>
+          <h1 className="text-2xl font-bold tracking-tight">Approval Checkpoints</h1>
+          <p className="text-muted-foreground">
+            System-wide compliance and regulatory verification logs.
+          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -94,11 +108,12 @@ export default function CompliancePage() {
                  <CardContent>
                      <div className="space-y-4">
                          <div className="text-sm">
-                             <span className="text-muted-foreground">Block Height:</span> <span className="font-mono">#8,992,102</span>
+                            <span className="text-muted-foreground">Recorded Allocations:</span>{" "}
+                            <span className="font-mono">{stats?.totalAllocations ?? 0}</span>
                          </div>
                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                              <Server className="h-3 w-3" />
-                             <span>All transaction logs are hashed and replicated across 5 audit nodes.</span>
+                            <span>Backed by the same audit feed powering the public dashboard.</span>
                          </div>
                      </div>
                  </CardContent>

@@ -20,14 +20,16 @@ app.use((req, res, next) => {
 
 // Routes
 const matchRoutes = require('./routes/matchRoutes');
-const donorAdminRoutes = require('./routes/donorRoutes'); // Will create next
-const recipientAdminRoutes = require('./routes/recipientRoutes'); // Will create next
+const donorAdminRoutes = require('./routes/donorRoutes');
+const recipientAdminRoutes = require('./routes/recipientRoutes');
 const allocationRoutes = require('./routes/allocationRoutes');
+const statsRoutes = require('./routes/statsRoutes');
 
 app.use('/api/matches', matchRoutes); // Routes for matching logic
 app.use('/api/donors', donorAdminRoutes);
 app.use('/api/recipients', recipientAdminRoutes);
 app.use('/api/allocation', allocationRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI, {

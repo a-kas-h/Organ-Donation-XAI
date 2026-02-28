@@ -15,19 +15,24 @@ import {
 } from "@/components/ui/breadcrumb"
 import { useAuth } from "@/lib/auth"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const router = useRouter()
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    if (!user) {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (isHydrated && !user) {
       router.push("/login")
     }
-  }, [user, router])
+  }, [isHydrated, user, router])
 
-  if (!user) return null
+  if (!isHydrated || !user) return null
 
   return (
     <SidebarProvider>

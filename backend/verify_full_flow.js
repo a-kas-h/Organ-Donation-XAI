@@ -12,11 +12,14 @@ const runVerification = async () => {
             donorId: `DNR${Date.now()}`,
             age: 35,
             weight: 70.5,
+            height: 175,
             BMI: 24.0,
             bloodType: 'O+',
             organDonated: 'Kidney',
             realTimeOrganHealthScore: 88,
             organConditionAlert: 'None',
+            hospitalLocation: 'Test Hospital',
+            preservationStart: new Date().toISOString(),
             medicalApproval: true
         });
         const donorMongoId = donorRes.data._id;
@@ -28,12 +31,14 @@ const runVerification = async () => {
             patientId: `PAT${Date.now()}`,
             age: 40,
             weight: 75.0,
+            height: 170,
             BMI: 25.0,
             bloodType: 'O+',
             organRequired: 'Kidney',
             diagnosisResult: 'Chronic Kidney Disease',
             biologicalMarkers: 5.0,
-            riskScore: 2.0
+            riskScore: 2.0,
+            organStatus: 'Waiting'
         });
         const recipientMongoId = recipientRes.data._id;
         console.log('✅ Recipient Created:', recipientRes.data.patientId);

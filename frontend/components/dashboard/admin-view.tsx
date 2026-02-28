@@ -1,12 +1,28 @@
 "use client"
 
+import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ShieldCheck, Users, Database, Play, AlertTriangle, ArrowRight, Settings } from "lucide-react"
+import { ShieldCheck, Users, Database, Play, AlertTriangle, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
+import { api } from "@/lib/api"
+
+type OverviewStats = {
+  totalRecipients: number
+  waitingRecipients: number
+  totalDonors: number
+  availableDonors: number
+  allocationsToday: number
+  avgWaitDays: number
+}
 
 export function AdminView() {
+  const { data, isLoading } = useQuery<OverviewStats>({
+    queryKey: ["overview-stats"],
+    queryFn: () => api.getOverviewStats(),
+  })
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       
@@ -18,8 +34,10 @@ export function AdminView() {
             <Database className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">1,280</div>
-            <p className="text-xs text-muted-foreground mt-1 text-green-600 font-medium">↑ 12% from last month</p>
+            <div className="text-3xl font-bold">
+              {isLoading ? <span className="opacity-40">–</span> : data?.totalDonors ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 text-green-600 font-medium">Live from registry</p>
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
@@ -28,8 +46,12 @@ export function AdminView() {
             <Users className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">3,402</div>
-            <p className="text-xs text-muted-foreground mt-1 text-red-500 font-medium">↑ 5 High Urgency today</p>
+            <div className="text-3xl font-bold">
+              {isLoading ? <span className="opacity-40">–</span> : data?.waitingRecipients ?? 0}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 text-red-500 font-medium">
+              High urgency monitored continuously
+            </p>
           </CardContent>
         </Card>
         <Card className="bg-primary text-primary-foreground border-none shadow-lg">
@@ -39,7 +61,9 @@ export function AdminView() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">Operational</div>
-            <p className="text-xs text-primary-foreground/70 mt-1">All systems nominal</p>
+            <p className="text-xs text-primary-foreground/70 mt-1">
+              {isLoading ? "Syncing metrics..." : `Allocations today: ${data?.allocationsToday ?? 0}`}
+            </p>
           </CardContent>
         </Card>
       </div>
